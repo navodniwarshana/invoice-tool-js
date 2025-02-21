@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Invoice</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.25/jspdf.plugin.autotable.min.js"></script>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            text-align: center;
+        }
+
+        .header-container {
+            display: flex;
+            justify-content: space-around;
+            align-items: center;
+            background-color: rgb(108, 108, 108);
+            color: rgb(32, 129, 255);
+        }
+
+        .button-container {
+            margin: 20px 0;
+        }
+
+        .button-container button {
+            margin: 5px;
+            padding: 10px 20px;
+            border: none;
+            cursor: pointer;
+        }
+
+        .print-button {
+            background: #007bff;
+            color: white;
+        }
+
+        .download-button {
+            background: #28a745;
+            color: white;
+        }
+
+        #pdf-viewer {
+            width: 100%;
+            height: 500px;
+            border: 1px solid #ddd;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="header-container">
+        <div>
+            <h3>NN Projects</h3>
+        </div>
+        <div style="align-content: start; display: block; text-align: left;">
+            <h3 style="margin-bottom: 0.5rem;">Invoice</h3>
+            <p id="invoice-date" style="margin-top: 0; text-align: left;"></p>
+        </div>
+    </div>
+    <div class="button-container">
+        <button class="print-button" onclick="printPDF()">Print Invoice</button>
+        <button class="download-button" onclick="downloadPDF()">Download PDF</button>
+    </div>
+    <iframe id="pdf-viewer"></iframe>
+
+    <script>
+        document.getElementById("invoice-date").textContent = "Date: " + new Date().toLocaleDateString();
+
+        async function generatePDF() {
+            const { jsPDF } = window.jspdf;
+            const doc = new jsPDF();
+            const currentDate = new Date().toLocaleDateString();
+            doc.setFontSize(12);
+            doc.text("NN Projects", 20, 10);
+            doc.text("Invoice", 180, 10, { align: "right" });
+            doc.setFontSize(8);
+            doc.setFontSize(8);
+            doc.text(`Date: ${currentDate}`, 186.5, 15 ,{ align: "right" });
+
+            doc.autoTable({
+                startY: 20,
+                head: [['Item', 'Quantity', 'Price', 'Total']],
+                body: [['Sample Item', '2', '$10', '$20']],
+                didDrawPage: function (data) {
+                    let pageSize = doc.internal.pageSize;
+                    let pageHeight = pageSize.height ? pageSize.height : pageSize.getHeight();
+                    doc.text(`Page ${doc.internal.getNumberOfPages()}`, 90, pageHeight - 10);
+                }
+            });
+
+            const pdfData = doc.output("datauristring");
+            document.getElementById("pdf-viewer").src = pdfData;
+            return doc;
+        }
+
+        function downloadPDF() {
+            generatePDF().then(doc => doc.save("invoice.pdf"));
+        }
+
+        function printPDF() {
+            generatePDF().then(doc => {
+                const pdfData = doc.output("bloburl");
+                const newWindow = window.open(pdfData, '_blank');
+                newWindow.print();
+            });
+        }
+
+        window.onload = generatePDF;
+    </script>
+</body>
+
+</html>
